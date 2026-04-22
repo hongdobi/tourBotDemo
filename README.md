@@ -35,12 +35,13 @@ Docker Compose를 통해 전체 시스템을 한 번에 실행할 수 있습니�
 - Docker 기반 통합 실행
 
 # Project Structure
+```
 tourBotDemo/
  ├── tourBotDemoWithSpringAi   (AI Service)
  ├── tourBotDemoHistoryService (History Service)
  ├── docker-compose.yml
  ├── .env.example
  └── README.md
-
+```
  
 
