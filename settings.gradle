@@ -1,0 +1,4 @@
+rootProject.name= 'tourBotDemo'
+
+include 'tourBotDemoHistoryService'
+include 'tourBotDemoWithSpringAi'

@@ -1,0 +1,26 @@
+server:
+  port: 8091
+
+spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+  datasource:
+    url: ${LOCAL_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: org.tourBot.history.domain
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    org.tourBot.history.mapper: DEBUG
+    org.mybatis: DEBUG
