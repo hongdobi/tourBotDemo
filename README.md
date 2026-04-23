@@ -9,10 +9,24 @@ Docker Compose를 통해 전체 시스템을 한 번에 실행할 수 있습니�
 # Architecture
 - AI Service: Spring AI 기반 LLM 응답 처리
 - History Service: PostgreSQL 기반 채팅 기록 저장
-- sessionId 기반 대화 상태 유지
-- 동일 userId + sessionId로 history 저장
 - PostgreSQL: 데이터 저장소
 - Docker Compose: 전체 서비스 orchestration
+
+```
+User
+  ↓
+Orchestrator (LLM, tool-calling)
+  ↓
+[Tools (= Agents)]
+  ├── search_places
+  ├── recommend_places
+  ├── save_place
+  └── booking_info
+  ↓
+Orchestrator (결과 조합 & 응답 생성)
+  ↓
+User
+```
 
 # Tech Stack
 - Java 21
