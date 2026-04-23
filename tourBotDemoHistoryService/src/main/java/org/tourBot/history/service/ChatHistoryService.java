@@ -1,6 +1,7 @@
 package org.tourBot.history.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.tourBot.history.domain.ChatHistory;
 import org.tourBot.history.dto.ChatRequest;
@@ -9,6 +10,7 @@ import org.tourBot.history.mapper.ChatHistoryMapper;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatHistoryService {
@@ -16,9 +18,11 @@ public class ChatHistoryService {
     private final ChatHistoryMapper mapper;
 
     public List<ChatHistory> getHistory(String userId, String sessionId) {
-        return mapper.getHistory(userId, sessionId);
-//        List<ChatHistory> blank = new ArrayList<>();
-//        return blank;
+
+        List<ChatHistory> historyList = mapper.getHistory(userId, sessionId);
+        log.debug("History List: {}", historyList);
+
+        return historyList;
     }
 
     public void saveHistory(ChatRequest request) {
