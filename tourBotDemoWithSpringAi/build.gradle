@@ -25,9 +25,6 @@ dependencies {
     /*elasticsearch*/
     implementation 'co.elastic.clients:elasticsearch-java:8.18.1'
 
-    /*.env*/
-    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
-
     /*lombok*/
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'

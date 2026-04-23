@@ -10,3 +10,7 @@ spring:
           model: gpt-4o-mini
 history:
   url: http://history-service:8091
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure.jdbc: DEBUG
