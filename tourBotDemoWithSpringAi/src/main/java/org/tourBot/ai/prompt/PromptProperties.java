@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class PromptProperties {
 
     private String orchestrator;
-    private String searchAgent;
+    private String recommendAgent;
     private String ragAgent;
     private String dbAgent;
 

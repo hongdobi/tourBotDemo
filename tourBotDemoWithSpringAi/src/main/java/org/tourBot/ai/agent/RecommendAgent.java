@@ -9,15 +9,15 @@ import org.tourBot.ai.prompt.PromptProperties;
 
 @Slf4j
 @Component
-public class SearchAgent {
+public class RecommendAgent {
 
     private final ChatClient chatClient;
     private final PromptProperties prompt;
 
-    public SearchAgent(ChatClient.Builder builder,
-                       PromptProperties prompt) {
+    public RecommendAgent(ChatClient.Builder builder,
+                          PromptProperties prompt) {
 
-        // SearchAgent 전용 모델 설정
+        // RecommendAgent 전용 모델 설정
         this.chatClient = builder
                 .defaultOptions(OpenAiChatOptions.builder()
                         .model("gpt-4o-mini")
@@ -28,18 +28,18 @@ public class SearchAgent {
     }
 
     @Tool(
-            name = "search",
+            name = "recommend",
             description = """
             Search for real-time or up-to-date information 
             such as weather, news, stock prices, and current events
             """
     )
-    public String search(String query) {
+    public String recommend(String query) {
 
-        log.info("Search Tool Called: {}", query);
+        log.info("Recommend Agent Called: {}", query);
 
         return chatClient.prompt()
-                .system(prompt.getSearchAgent())
+                .system(prompt.getRecommendAgent())
                 .user(query)
                 .call()
                 .content();

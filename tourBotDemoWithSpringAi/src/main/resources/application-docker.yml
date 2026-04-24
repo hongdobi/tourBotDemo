@@ -15,6 +15,9 @@ logging:
   level:
     org.springframework.boot.autoconfigure.jdbc: DEBUG
 
+whether:
+  api-key: ${OPENWHETHER_API_KEY}
+
 ai:
   prompt:
     orchestrator: |
@@ -37,7 +40,7 @@ ai:
 
       Always choose the best approach.
 
-    search-agent: |
+    recommend-agent: |
       You are a search assistant.
 
       Your job:
