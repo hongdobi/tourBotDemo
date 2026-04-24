@@ -1,12 +1,12 @@
 package org.tourBot.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.tourBot.ai.orchestrator.OrchestratorService;
 import org.tourBot.domain.Role;
 import org.tourBot.dto.ChatRequest;
 import org.tourBot.dto.ChatResponse;
@@ -21,7 +21,7 @@ import java.util.UUID;
 public class AiService {
 
     @Autowired
-    private final ChatClient chatClient;
+    private final OrchestratorService orchestratorService;
     @Autowired
     private final HistoryClientService historyClientService;
 
@@ -53,10 +53,7 @@ public class AiService {
         messages.add(new UserMessage(request.getMessage()));
 
         // LLM 호출
-        String answer = chatClient.prompt()
-                .messages(messages)
-                .call()
-                .content();
+        String answer = orchestratorService.handle(messages);
 
         // 히스토리 저장
         historyClientService.saveHistory(request.getUserId(), sessionId, Role.USER, request.getMessage());
