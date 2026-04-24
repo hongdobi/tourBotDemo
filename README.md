@@ -9,9 +9,9 @@ Docker Compose를 통해 전체 시스템을 한 번에 실행할 수 있습니�
 # Architecture
 - AI Service: Spring AI 기반 LLM 
 - History Service: PostgreSQL 내부 데이터 저장소에 채팅 기록 저장
-- Search Agent: 검색 담당 AI
+- Search Agent: 외부 데이터 검색 담당 AI
 - Rag Agent: Vector DB 조회 담당 AI
-- DB Agent: 내부데이터 조회 담당 AI
+- DB Agent: 내부 DB 조회 담당 AI
 
 ```
                 [User]
