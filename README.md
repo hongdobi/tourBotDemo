@@ -7,30 +7,32 @@ Microservices Architecture 기반으로 AI 응답 서비스와
 Docker Compose를 통해 전체 시스템을 한 번에 실행할 수 있습니다.
 
 # Architecture
-- AI Service: Spring AI 기반 LLM 
-- History Service: PostgreSQL 내부 데이터 저장소에 채팅 기록 저장
-- Search Agent: 외부 데이터 검색 담당 AI
-- Rag Agent: Vector DB 조회 담당 AI
-- DB Agent: 내부 DB 조회 담당 AI
+- Orchestrator LLM: 사용자 질문을 분석하여 필요한 tool을 판단하는 LLM 
+- Search Tool: 외부 데이터 검색 Tool(whether API, exchange rate API and etc.)
+- Rag Tool: Vector DB 조회 Tool
+- DB Tool: 내부 DB 조회 Tool
+- Recommend Agent: 조합/추천 담당 AI
 
 ```
                 [User]
                    ↓
         ┌────────────────────┐
-        │   Orchestrator LLM │  ← (Planner)
+        │  Orchestrator LLM  │  ← (Planner)
         └────────────────────┘
              ↓        ↓
      (tool 선택)   (직접 응답)
 
    ┌───────────────┬───────────────┬───────────────┐
-   │ Search Agent  │  RAG Agent    │  DB Agent     │
-   │ (외부검색)     │ (Vector DB)   │ (내부데이터)  │
+   │ Search Tool   │  RAG Tool     │  DB Tool      │
+   │ (외부데이터)  │ (Vector DB)   │ (내부데이터)  │
    └───────────────┴───────────────┴───────────────┘
              ↓
-        결과 수집
+   ┌────────────────────┐
+   │  Recommend Agent   │ ← (LLM)
+   └────────────────────┘
              ↓
    ┌────────────────────┐
-   │   Synthesizer LLM  │ ← (최종 정리)
+   │  Orchestrator LLM  │ ← (최종 정리)
    └────────────────────┘
              ↓
            응답
