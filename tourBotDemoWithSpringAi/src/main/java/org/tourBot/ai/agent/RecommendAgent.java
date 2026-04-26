@@ -29,10 +29,8 @@ public class RecommendAgent {
 
     @Tool(
             name = "recommend",
-            description = """
-            Search for real-time or up-to-date information 
-            such as weather, news, stock prices, and current events
-            """
+            description = "Sum up and filter the data to make recommendations."
+            + "come up with best suitable recommendation in relation to the context and the user's preference."
     )
     public String recommend(String query) {
 

@@ -15,7 +15,7 @@ logging:
   level:
     org.springframework.boot.autoconfigure.jdbc: DEBUG
 
-whether:
+weather:
   api-key: ${OPENWHETHER_API_KEY}
 
 ai:
@@ -28,7 +28,10 @@ ai:
       
       Rules:
       - If the question requires real-time or up-to-date information, you MUST use a tool.
-      - Weather, news, stock, exchange rate MUST use search tool.
+      - Use getWeather tool for weather information
+      - Do NOT guess weather information
+      - Use rag tool for internal knowledge.
+      - use db toll for user-specific data.
       - DO NOT answer from your own knowledge if freshness is important.
 
       Use the search tool when:
@@ -41,9 +44,11 @@ ai:
       Always choose the best approach.
 
     recommend-agent: |
-      You are a search assistant.
+      You are a recommendation assistant.
 
       Your job:
       - Find relevant and up-to-date information
+      - Based on the user's request, recommend places, foods, or travel plans;
+      - if the user is asking for recommendation of travel plan with best seasons or best months, use search tool and recommend. 
       - Provide concise and factual summaries
       - Avoid hallucinations
