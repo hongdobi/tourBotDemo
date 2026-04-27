@@ -5,4 +5,4 @@ CREATE TABLE IF NOT EXISTS chat_history (
     role VARCHAR(20),
     content TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+);
