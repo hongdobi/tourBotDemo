@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.stereotype.Service;
 import org.tourBot.ai.agent.RecommendAgent;
 import org.tourBot.ai.prompt.PromptProperties;
+import org.tourBot.ai.tool.ExchangeRateTool;
 import org.tourBot.ai.tool.WeatherTool;
 
 import java.util.List;
@@ -19,6 +19,7 @@ public class OrchestratorService {
     private final ChatClient chatClient;
     private final RecommendAgent recommendAgent;
     private final WeatherTool weatherTool;
+    private final ExchangeRateTool exchangeRateTool;
 //    private final RagTool ragTool;
 //    private final DbTool dbTool;
     private final PromptProperties prompt;
@@ -43,7 +44,7 @@ public class OrchestratorService {
         return chatClient.prompt()
                 .system(prompt.getOrchestrator())
                 .messages(messages)
-                .toolCallbacks(ToolCallbacks.from(weatherTool))
+                .tools(weatherTool, exchangeRateTool)
                 .call()
                 .content();
     }
