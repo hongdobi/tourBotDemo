@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.tourBot.history.mapper.FileMapper">
+
+    <insert id="insertFile">
+        INSERT INTO file (
+            file_id,
+            file_name,
+            file_path,
+            extension,
+            created_at
+        ) VALUES (
+            #{fileId},
+            #{fileName},
+            #{filePath},
+            #{extension},
+            NOW()
+        )
+    </insert>
+
+    <select id="findById" resultType="org.tourBot.history.dto.FileDto">
+        SELECT *
+        FROM file
+        WHERE file_id = #{fileId}
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM file
+        WHERE file_id = #{fileId}
+    </delete>
+
+</mapper>

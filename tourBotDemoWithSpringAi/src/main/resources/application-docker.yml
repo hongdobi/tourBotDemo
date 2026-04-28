@@ -2,6 +2,10 @@ server:
   port: 8090
 
 spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -12,10 +16,15 @@ spring:
       chat:
         options:
           model: gpt-4o-mini
+      embedding:
+        model: text-embedding-3-small
     vectorstore:
       pgvector:
         table-name: vector_store
         initialize-schema: false
+        index-type: ivfflat
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
 
 history:
   url: ${HISTORY_SERVICE_URL}
