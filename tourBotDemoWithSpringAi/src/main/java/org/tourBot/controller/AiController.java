@@ -7,7 +7,7 @@ import org.tourBot.dto.ChatResponse;
 import org.tourBot.service.AiService;
 
 @RestController
-@RequestMapping("/ai")
+@RequestMapping("/api/ai")
 @RequiredArgsConstructor
 public class AiController {
 
