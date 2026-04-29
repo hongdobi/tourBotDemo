@@ -24,6 +24,7 @@
             , created_at
         FROM chat_history
         WHERE user_id = #{userId}
+        AND session_id = #{sessionId}
         ORDER BY created_at ASC
         LIMIT 20
     </select>

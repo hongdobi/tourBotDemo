@@ -6,6 +6,7 @@ export default function ChatBox() {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
 
   const messagesEndRef = useRef(null);
   const userId = "hongdobi";
@@ -14,6 +15,40 @@ export default function ChatBox() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  // sessionId localStorage에서 가져옴
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem("sessionId");
+    if (savedSessionId) {
+      setSessionId(savedSessionId);
+    }
+  }, []);
+
+  // sessionId 있으면, history api조회하여 대화기록 가져오기
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const loadHistory = async () => {
+      try {
+        const res = await api.get(`/ai/history`, {
+            params: {
+                userId,
+                sessionId,
+            }
+        });
+
+        const formatted = res.data.map((item) => ({
+           role: item.role,
+           text: item.content
+        }));
+        setMessages(formatted);
+      } catch (e) {
+        console.error("히스토리 로드 실패", e);
+      }
+    };
+
+    loadHistory();
+  }, [sessionId]);
 
   const send = async () => {
     if (!message.trim() || loading) return;
@@ -28,6 +63,7 @@ export default function ChatBox() {
       const res = await api.post("/ai/chat", {
         userId,
         message,
+        sessionId,
       });
 
       const botMsg = {
@@ -36,6 +72,9 @@ export default function ChatBox() {
       };
 
       setMessages((prev) => [...prev, botMsg]);
+      setSessionId(res.data.sessionId);
+      localStorage.setItem("sessionId", res.data.sessionId);
+
     } catch (e) {
       setMessages((prev) => [
         ...prev,
@@ -53,8 +92,16 @@ export default function ChatBox() {
     }
   };
 
+  // 새 채팅 버튼
+  const newChat = () => {
+    setSessionId(null);
+    setMessages([]);
+    localStorage.removeItem("sessionId");
+  };
+
   return (
     <div className="container">
+      <button onClick={newChat}>새 채팅</button>
       <div className="chat-area">
         {messages.map((msg, idx) => (
           <div
