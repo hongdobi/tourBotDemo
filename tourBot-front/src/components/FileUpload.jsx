@@ -7,7 +7,7 @@ export default function FileUpload() {
     const formData = new FormData();
     formData.append("file", file);
 
-    await api.post("/files/upload", formData, {
+    await api.post("/rag/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 

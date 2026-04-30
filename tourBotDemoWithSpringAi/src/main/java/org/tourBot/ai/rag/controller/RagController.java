@@ -10,10 +10,15 @@ import org.tourBot.dto.IngestRequest;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/rag")
+@RequestMapping("/api/rag")
 public class RagController {
 
     private final RagService ragService;
+
+    @PostMapping("/upload")
+    public String upload(@RequestParam MultipartFile file) {
+        return ragService.upload(file);
+    }
 
     @PostMapping("/ingest")
     public String ingest(@RequestBody IngestRequest req) {

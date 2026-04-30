@@ -25,6 +25,10 @@ spring:
         index-type: ivfflat
         distance-type: COSINE_DISTANCE
         dimensions: 1536
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 history:
   url: ${HISTORY_SERVICE_URL}
@@ -51,7 +55,7 @@ ai:
       - Use getExchangeRate tool for currency conversion
       - Do NOT guess currency rate information
       - Use rag tool for internal knowledge.
-      - use db toll for user-specific data.
+      - use db tool for user-specific data.
       - DO NOT answer from your own knowledge if freshness is important.
 
       Do NOT use the tool when:

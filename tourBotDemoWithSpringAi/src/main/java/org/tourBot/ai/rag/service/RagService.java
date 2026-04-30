@@ -9,8 +9,12 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.tourBot.client.HistoryClient;
+import org.tourBot.domain.Role;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -21,7 +25,11 @@ import java.util.*;
 public class RagService {
 
     private final VectorStore vectorStore;
-    private final ChatClient chatClient;
+    private final HistoryClient historyClient;
+
+    public String upload(MultipartFile file) {
+        return historyClient.upload(file);
+    }
 
     public void ingest(String fileId, String filePath, String fileName)  {
 

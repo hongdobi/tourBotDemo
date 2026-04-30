@@ -7,7 +7,7 @@ import org.tourBot.history.service.FileService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/files")
+@RequestMapping("/files")
 public class FileController {
 
     private final FileService fileService;

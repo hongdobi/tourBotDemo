@@ -46,6 +46,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./data:/data
 
   postgres:
     image: pgvector/pgvector:pg16

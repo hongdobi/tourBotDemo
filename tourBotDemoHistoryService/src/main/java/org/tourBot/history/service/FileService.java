@@ -9,6 +9,9 @@ import org.tourBot.history.dto.FileDto;
 import org.tourBot.history.mapper.FileMapper;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,6 +40,10 @@ public class FileService {
                     : "unknown";
 
             String filePath = uploadDir + fileId + "." + extension;
+
+            // directory 생성
+            Path dirPath = Paths.get(uploadDir);
+            Files.createDirectories(dirPath);
 
             // 파일 저장
             File dest = new File(filePath);
