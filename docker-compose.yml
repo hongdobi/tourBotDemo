@@ -30,6 +30,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./data:/data
 
   history-service:
     build: ./tourBotDemoHistoryService

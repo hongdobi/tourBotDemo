@@ -56,7 +56,7 @@ public class RagService {
             );
 
         } catch(Exception e) {
-            throw new RuntimeException("RAG ingest failed, e");
+            throw new RuntimeException("RAG ingest failed", e);
         }
     }
 

@@ -29,7 +29,7 @@ public class AiClient {
         log.info("AI ingest 요청 (fileId={})", fileId);
 
         webClient.post()
-                .uri("/rag/ingest")
+                .uri("/api/rag/ingest")
                 .bodyValue(Map.of(
                         "fileId", fileId,
                         "filePath", filePath,
