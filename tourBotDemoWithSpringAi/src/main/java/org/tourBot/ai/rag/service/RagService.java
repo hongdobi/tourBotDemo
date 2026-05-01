@@ -4,21 +4,23 @@ import lombok.RequiredArgsConstructor;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.sax.BodyContentHandler;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.tourBot.ai.rag.dto.RagRequest;
+import org.tourBot.ai.rag.dto.RagResponse;
+import org.tourBot.ai.rag.dto.Source;
 import org.tourBot.client.HistoryClient;
-import org.tourBot.domain.Role;
+import org.springframework.ai.chat.client.ChatClient;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +28,7 @@ public class RagService {
 
     private final VectorStore vectorStore;
     private final HistoryClient historyClient;
+    private final ChatClient chatClient;
 
     public String upload(MultipartFile file) {
         return historyClient.upload(file);
@@ -97,5 +100,95 @@ public class RagService {
         FilterExpressionBuilder b = new FilterExpressionBuilder();
 
         vectorStore.delete(b.eq("fileId", fileId).build());
+    }
+
+    // vector search
+    public RagResponse ask(RagRequest request) {
+
+        List<Document> docs = similaritySearch(
+                request.getQuestion(),
+                request.getFileId()
+        );
+
+        if (docs.isEmpty()) {
+            return new RagResponse(
+                    "관련 문서를 찾을 수 없습니다.",
+                    List.of()
+            );
+        }
+
+        List<Source> sources = docs.stream()
+                .map(doc -> new Source(
+                        String.valueOf(doc.getMetadata().get("fileId")),
+                        String.valueOf(doc.getMetadata().get("fileName")),
+                        doc.getText()
+                ))
+                .toList();
+
+        // context 생성
+        String context = sources.stream()
+                .map(s -> "[출처: " + s.getFileName() + "]\n" + s.getContent())
+                .collect(Collectors.joining("\n\n"));
+
+        String prompt = """
+                You are a document-based QA system.
+                
+                [Rules]
+                1. You MUST answer ONLY using the provided CONTEXT.
+                2. NEVER use external knowledge or make assumptions.
+                3. If the answer is not in the context, respond exactly:
+                   "Insufficient information in the document."
+                4. Each answer must include its source (e.g., [guide.pdf]).
+                5. Keep the answer concise and factual.
+
+                [Example Output]
+                Answer:
+                This feature allows users to upload documents.
+                
+                Sources:
+                - guide.pdf
+                
+                [Context]
+                %s
+                
+                [Question]
+                %s
+                
+                [Answer Format]
+                Answer:
+                <answer>
+                
+                Sources:
+                - <fileName>
+                
+                [Answer]
+                """.formatted(context, request.getQuestion());
+
+        String answer = chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
+
+        return new RagResponse(answer, sources);
+    }
+
+    // vectorDB 조회
+    public List<Document> similaritySearch(String question, String fileId) {
+
+        SearchRequest.Builder builder = SearchRequest.builder()
+                .query(question)
+                .topK(5);
+
+        // metadata filter (정석 방식)
+        if (fileId != null && !fileId.isBlank()) {
+
+            FilterExpressionBuilder feb = new FilterExpressionBuilder();
+
+            Filter.Expression filter = feb.eq("fileId", fileId).build();
+
+            builder.filterExpression(filter);
+        }
+
+        return vectorStore.similaritySearch(builder.build());
     }
 }

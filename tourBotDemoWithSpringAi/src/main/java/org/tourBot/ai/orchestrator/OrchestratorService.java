@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.tourBot.ai.agent.RecommendAgent;
 import org.tourBot.ai.prompt.PromptProperties;
 import org.tourBot.ai.tool.ExchangeRateTool;
+import org.tourBot.ai.tool.RagTool;
 import org.tourBot.ai.tool.WeatherTool;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class OrchestratorService {
     private final RecommendAgent recommendAgent;
     private final WeatherTool weatherTool;
     private final ExchangeRateTool exchangeRateTool;
-//    private final RagTool ragTool;
+    private final RagTool ragTool;
 //    private final DbTool dbTool;
     private final PromptProperties prompt;
 
@@ -44,7 +45,7 @@ public class OrchestratorService {
         return chatClient.prompt()
                 .system(prompt.getOrchestrator())
                 .messages(messages)
-                .tools(weatherTool, exchangeRateTool)
+                .tools(weatherTool, exchangeRateTool, ragTool)
                 .call()
                 .content();
     }

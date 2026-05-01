@@ -2,10 +2,15 @@ package org.tourBot.ai.rag.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.tourBot.ai.rag.dto.RagRequest;
+import org.tourBot.ai.rag.dto.RagResponse;
 import org.tourBot.ai.rag.service.RagService;
 import org.tourBot.dto.IngestRequest;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -21,14 +26,14 @@ public class RagController {
     }
 
     @PostMapping("/ingest")
-    public String ingest(@RequestBody IngestRequest req) {
+    public ResponseEntity<String> ingest(@RequestBody IngestRequest req) {
 
             ragService.ingest(
                     req.getFileId(),
                     req.getFilePath(),
                     req.getFileName()
             );
-            return "PDF ingested";
+        return ResponseEntity.ok("FILE INGESTED OK");
     }
 
     @DeleteMapping("/{fileId}")
@@ -37,5 +42,10 @@ public class RagController {
         ragService.delete(fileId);
 
         return "deleted";
+    }
+
+    @PostMapping("/ask")
+    public ResponseEntity<RagResponse> ask(@RequestBody RagRequest request) {
+        return ResponseEntity.ok(ragService.ask(request));
     }
 }
