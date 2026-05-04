@@ -82,12 +82,27 @@ public class RagService {
 
     private List<String> chunk(String text) {
 
-        int chunkSize = 500;
+        int chunkSize = 800;
+        int overlap = 200;
         List<String> chunks = new ArrayList<>();
 
-        for (int i = 0; i < text.length(); i += chunkSize) {
-            // 전체 text 길이 vs. chunkSize+1 중에 더 큰 쪽만큼 text 자르기
-            chunks.add(text.substring(i, Math.min(text.length(), i + chunkSize)));
+        int start = 0;
+
+        while (start < text.length()) {
+
+            // text 전체와 start + chunkSize 중 작은 것 => end
+            int end = Math.min(text.length(), start + chunkSize);
+
+            // 문장 끝 기준 찾기(end부터 .까지 길이 반환)
+            int lastPeriod = text.lastIndexOf(".", end);
+            if (lastPeriod > start) {
+                end = lastPeriod + 1;
+            }
+
+            chunks.add(text.substring(start, end));
+
+            // overlap 되도록 start index를 다시 세팅
+            start += (chunkSize - overlap);
         }
 
         // 잘라낸 text 반환
@@ -177,7 +192,7 @@ public class RagService {
 
         SearchRequest.Builder builder = SearchRequest.builder()
                 .query(question)
-                .topK(5);
+                .topK(10);
 
         // metadata filter (정석 방식)
         if (fileId != null && !fileId.isBlank()) {
