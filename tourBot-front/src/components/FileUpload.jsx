@@ -14,5 +14,12 @@ export default function FileUpload() {
     alert("업로드 완료");
   };
 
-  return <input type="file" onChange={upload} />;
+  return (
+    <div className="bg-white rounded-2xl shadow p-4 flex items-center justify-between">
+      <input type="file" className="text-sm text-gray-600" />
+      <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+        업로드
+      </button>
+    </div>
+  );
 }

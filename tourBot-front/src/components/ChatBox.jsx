@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import api from "../api/client";
-import "./ChatBox.css";
 
 export default function ChatBox() {
   const [messages, setMessages] = useState([]);
@@ -100,38 +99,57 @@ export default function ChatBox() {
   };
 
   return (
-    <div className="container">
-      <button onClick={newChat}>새 채팅</button>
-      <div className="chat-area">
+    <div className="bg-white rounded-2xl shadow flex flex-col h-[600px]">
+
+      {/* 메시지 영역 */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`message ${msg.role === "user" ? "user" : "bot"}`}
+            className={`flex ${
+              msg.role === "user" ? "justify-end" : "justify-start"
+            }`}
           >
-            {msg.text}
+            <div
+              className={`
+                px-4 py-3 rounded-2xl max-w-[75%] whitespace-pre-wrap
+                ${
+                  msg.role === "user"
+                    ? "bg-green-400 text-white"
+                    : "bg-gray-200 text-gray-800"
+                }
+              `}
+            >
+              {msg.text}
+            </div>
           </div>
         ))}
 
-        {/* 로딩 UI */}
+        {/* 로딩 */}
         {loading && (
-          <div className="message bot typing">
-            AI가 답변 작성 중...
+          <div className="flex">
+            <div className="bg-gray-200 text-gray-500 px-4 py-3 rounded-2xl animate-pulse">
+              AI가 답변 작성 중...
+            </div>
           </div>
         )}
 
-        {/* 스크롤 anchor */}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="input-area">
+      {/* 입력 영역 */}
+      <div className="border-t p-3 flex gap-2">
         <input
-          className="input"
+          className="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="메시지 입력..."
         />
-        <button className="button" onClick={send}>
+        <button
+          onClick={send}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+        >
           전송
         </button>
       </div>
