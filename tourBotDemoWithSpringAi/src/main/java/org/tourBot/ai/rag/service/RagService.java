@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.tourBot.ai.rag.dto.RagRequest;
 import org.tourBot.ai.rag.dto.RagResponse;
 import org.tourBot.ai.rag.dto.Source;
+import org.tourBot.ai.rag.repository.BM25Repository;
 import org.tourBot.client.HistoryClient;
 import org.springframework.ai.chat.client.ChatClient;
 
@@ -29,6 +30,7 @@ public class RagService {
     private final VectorStore vectorStore;
     private final HistoryClient historyClient;
     private final ChatClient chatClient;
+    private final BM25Repository bm25Repository;
 
     public String upload(MultipartFile file) {
         return historyClient.upload(file);
@@ -120,7 +122,7 @@ public class RagService {
     // vector search
     public RagResponse ask(RagRequest request) {
 
-        List<Document> docs = similaritySearch(
+        List<Document> docs = hybridSearch(
                 request.getQuestion(),
                 request.getFileId()
         );
@@ -205,5 +207,33 @@ public class RagService {
         }
 
         return vectorStore.similaritySearch(builder.build());
+    }
+
+    // vector + BM25 search
+    public List<Document> hybridSearch(String question, String fileId) {
+
+        // vector search
+        List<Document> vectorDocs = similaritySearch(question, fileId);
+
+        // BM25 search
+        List<Document> bm25Docs = bm25Repository.search(question, fileId, 10);
+
+        // merge + dedup + scoring
+        Map<String, Document> merged = new LinkedHashMap<>();
+
+        // vector 우선
+        for (Document doc : vectorDocs) {
+            merged.put(doc.getText(), doc);
+        }
+
+        // BM25 추가
+        for (Document doc : bm25Docs) {
+            merged.putIfAbsent(doc.getText(), doc);
+        }
+
+        return merged.values()
+                .stream()
+                .limit(10)
+                .toList();
     }
 }
