@@ -135,12 +135,12 @@ Plan {
 
 # Tech Stack
 
-LLM: gpt-4.1 (or configurable)
-Embedding: text-embedding-3-small
-Backend: Java 21, Spring Boot, Spring AI
-Frontend: React
-Database: PostgreSQL + pgvector
-Infra: Docker Compose
+- LLM: gpt-4.1 (or configurable)
+- Embedding: text-embedding-3-small
+- Backend: Java 21, Spring Boot, Spring AI
+- Frontend: React
+- Database: PostgreSQL + pgvector
+- Infra: Docker Compose
 
 ---
 
@@ -168,6 +168,6 @@ tourBotDemo/
 
 ---
 
-# 핵심
+# Essential
 
 "LLM을 사용하는 시스템이 아니라, LLM을 통제하는 시스템"
