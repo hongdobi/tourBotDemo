@@ -7,7 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class Source {
 
-    private String fileId;
-    private String fileName;
     private String content;
+    private String fileName;
+    private String fileId;
 }

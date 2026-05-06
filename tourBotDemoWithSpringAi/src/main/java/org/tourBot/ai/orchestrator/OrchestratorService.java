@@ -1,53 +1,76 @@
 package org.tourBot.ai.orchestrator;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.client.ChatClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 import org.tourBot.ai.agent.RecommendAgent;
-import org.tourBot.ai.prompt.PromptProperties;
+import org.tourBot.ai.orchestrator.planner.LlmPlanner;
+import org.tourBot.ai.orchestrator.planner.Plan;
+import org.tourBot.ai.orchestrator.planner.RuleBasedPlanner;
+import org.tourBot.ai.rag.dto.Source;
 import org.tourBot.ai.tool.ExchangeRateTool;
 import org.tourBot.ai.tool.RagTool;
 import org.tourBot.ai.tool.WeatherTool;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrchestratorService {
 
-    private final ChatClient chatClient;
     private final RecommendAgent recommendAgent;
     private final WeatherTool weatherTool;
     private final ExchangeRateTool exchangeRateTool;
     private final RagTool ragTool;
-//    private final DbTool dbTool;
-    private final PromptProperties prompt;
+    private final RuleBasedPlanner rulePlanner;
+    private final LlmPlanner llmPlanner;
 
     public String handle(List<Message> messages) {
 
         //마지막 사용자 메시지 추출
         String userInput = extractLastUserMessage(messages);
+        log.info("User Input: {}", userInput);
 
-        // 추천 키워드 걸리면 바로 recommendAgent 사용
-        if(needsRecommendation(userInput)) {
-            return recommendAgent.recommend(userInput);
+        // Planner
+        Plan plan = rulePlanner.plan(userInput);
+        if (plan == null) {
+            plan = llmPlanner.plan(userInput);
         }
 
-        //prompt(): prompt builder 시작
-        //system(): system prompt 설정
-        //messages(): 사용자 대화 history 전달
-        //tools(): LLM에게 사용할 수 있는 tools 등록(searchTool, etc.)
-        //call(): LLM API 호출
-        //content(): 최종 text 추출(LLM 응답)
+        log.info("Plan: {}", plan);
 
-        return chatClient.prompt()
-                .system(prompt.getOrchestrator())
-                .messages(messages)
-                .tools(weatherTool, exchangeRateTool, ragTool)
-                .call()
-                .content();
+        // Tool 실행
+        List<Source> docs = new ArrayList<>();
+        WeatherTool.WeatherResult weather = null;
+        ExchangeRateTool.ExchangeResult exchange = null;
+
+        if (plan.isUseRag()) {
+            docs = ragTool.search(userInput);
+            log.info("RAG docs size: {}", docs.size());
+        }
+
+        if (plan.isUseWeather()) {
+            weather = weatherTool.getWeather(userInput);
+        }
+
+        if (plan.isUseExchangeRate()) {
+            exchange = exchangeRateTool.getExchangeRate(userInput);
+        }
+
+        // Rerank (간단 버전)
+        docs = rerank(userInput, docs);
+
+        return recommendAgent.generate(
+                userInput,
+                docs,
+                weather,
+                exchange
+        );
     }
 
     // 마지막 사용자 메시지 추출
@@ -64,24 +87,17 @@ public class OrchestratorService {
         return "";
     }
 
-    // recommendAgent 로 보낼 키워드 filtering
-    private boolean needsRecommendation(String userInput) {
+    private List<Source> rerank(String query, List<Source> docs) {
 
-        if (userInput == null) return false;
+        if (docs == null || docs.isEmpty()) {
+            return docs;
+        }
 
-        String text = userInput.toLowerCase();
-
-        return text.contains("추천") ||
-                text.contains("맛집") ||
-                text.contains("여행") ||
-                text.contains("갈만한") ||
-                text.contains("어디") ||
-
-                text.contains("recommend") ||
-                text.contains("suggest") ||
-                text.contains("restaurant") ||
-                text.contains("travel") ||
-                text.contains("place to go");
+        // 현재는 길이 기반 간단 정렬 (임시)
+        return docs.stream()
+                .sorted(Comparator.comparingInt(doc -> doc.getContent().length()))
+                .limit(5)
+                .toList();
     }
 
 }

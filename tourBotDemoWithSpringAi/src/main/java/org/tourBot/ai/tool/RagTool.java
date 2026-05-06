@@ -2,16 +2,12 @@ package org.tourBot.ai.tool;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
-import org.tourBot.ai.rag.dto.RagRequest;
-import org.tourBot.ai.rag.dto.RagResponse;
 import org.tourBot.ai.rag.dto.Source;
 import org.tourBot.ai.rag.service.RagService;
 
 import java.util.Collections;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -20,26 +16,16 @@ public class RagTool {
 
     private final RagService ragService;
 
-    @Tool(name = "searchDocuments", description = "Search internal documents and answer questions based on context")
-    public String searchDocuments(String question) {
+    public List<Source> search(String query) {
 
-        log.info("RagTool called: {}", question);
+        log.info("RagTool search called: {}", query);
 
-        RagResponse response = ragService.ask(new RagRequest(question, null));
+        List<Source> results = ragService.retrieve(query);
 
-        String sources = Optional.ofNullable(response.getSources())
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(Source::getFileName)
-                .collect(Collectors.joining(", "));
+        if (results == null) {
+            return Collections.emptyList();
+        }
 
-        return """
-        [RAG_RESULT]
-        Answer:
-        %s
-    
-        Sources:
-        %s
-        """.formatted(response.getAnswer(), sources);
+        return results;
     }
 }

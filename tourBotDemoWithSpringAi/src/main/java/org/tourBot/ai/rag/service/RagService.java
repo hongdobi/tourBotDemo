@@ -29,7 +29,6 @@ public class RagService {
 
     private final VectorStore vectorStore;
     private final HistoryClient historyClient;
-    private final ChatClient chatClient;
     private final BM25Repository bm25Repository;
 
     public String upload(MultipartFile file) {
@@ -119,74 +118,22 @@ public class RagService {
         vectorStore.delete(b.eq("fileId", fileId).build());
     }
 
-    // vector search
-    public RagResponse ask(RagRequest request) {
+    // rag 조회
+    public List<Source> retrieve(String query) {
 
-        List<Document> docs = hybridSearch(
-                request.getQuestion(),
-                request.getFileId()
-        );
+        List<Document> docs = hybridSearch(query, null);
 
         if (docs.isEmpty()) {
-            return new RagResponse(
-                    "관련 문서를 찾을 수 없습니다.",
-                    List.of()
-            );
+            return Collections.emptyList();
         }
 
-        List<Source> sources = docs.stream()
+        return docs.stream()
                 .map(doc -> new Source(
-                        String.valueOf(doc.getMetadata().get("fileId")),
+                        doc.getText(),
                         String.valueOf(doc.getMetadata().get("fileName")),
-                        doc.getText()
+                        String.valueOf(doc.getMetadata().get("fileId"))
                 ))
                 .toList();
-
-        // context 생성
-        String context = sources.stream()
-                .map(s -> "[출처: " + s.getFileName() + "]\n" + s.getContent())
-                .collect(Collectors.joining("\n\n"));
-
-        String prompt = """
-                You are a document-based QA system.
-                
-                [Rules]
-                1. You MUST answer ONLY using the provided CONTEXT.
-                2. NEVER use external knowledge or make assumptions.
-                3. If the answer is not in the context, respond exactly:
-                   "Insufficient information in the document."
-                4. Each answer must include its source (e.g., [guide.pdf]).
-                5. Keep the answer concise and factual.
-
-                [Example Output]
-                Answer:
-                This feature allows users to upload documents.
-                
-                Sources:
-                - guide.pdf
-                
-                [Context]
-                %s
-                
-                [Question]
-                %s
-                
-                [Answer Format]
-                Answer:
-                <answer>
-                
-                Sources:
-                - <fileName>
-                
-                [Answer]
-                """.formatted(context, request.getQuestion());
-
-        String answer = chatClient.prompt()
-                .user(prompt)
-                .call()
-                .content();
-
-        return new RagResponse(answer, sources);
     }
 
     // vectorDB 조회

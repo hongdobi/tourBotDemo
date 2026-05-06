@@ -24,11 +24,7 @@ public class ExchangeRateTool {
         this.chatClient = builder.build();
     }
 
-    @Tool(
-            name = "getExchangeRate",
-            description = "Convert currency. Use for exchange rate questions. Example: USD to KRW, EUR to USD"
-    )
-    public String getExchangeRate(String query) {
+    public ExchangeResult getExchangeRate(String query) {
 
         log.info("ExchangeTool called: {}", query);
 
@@ -87,7 +83,7 @@ public class ExchangeRateTool {
     }
 
     // 환율 API 호출
-    private String callExchangeApi(ExchangeRequest req) {
+    private ExchangeResult callExchangeApi(ExchangeRequest req) {
 
         try {
             String url = String.format(
@@ -113,20 +109,26 @@ public class ExchangeRateTool {
 
             double result = rates.get(to).asDouble();
 
-            return String.format(
-                    "%.2f %s = %.2f %s",
-                    req.amount(),
+            return new ExchangeResult(
                     req.from(),
-                    result,
-                    req.to()
+                    req.to(),
+                    req.amount(),
+                    result
             );
 
         } catch (Exception e) {
             log.error("Exchange API error", e);
-            return "Failed to fetch exchange rate";
+            return new ExchangeResult(
+                    req.from(),
+                    req.to(),
+                    req.amount(),
+                    -1.0 // 실패 표시
+            );
         }
     }
 
     // DTO
     record ExchangeRequest(String from, String to, double amount) {}
+
+    public record ExchangeResult(String from, String to, double amount, double result) {}
 }

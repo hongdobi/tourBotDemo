@@ -5,8 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.tourBot.ai.rag.dto.RagRequest;
-import org.tourBot.ai.rag.dto.RagResponse;
 import org.tourBot.ai.rag.service.RagService;
 import org.tourBot.dto.IngestRequest;
 
@@ -44,8 +42,4 @@ public class RagController {
         return "deleted";
     }
 
-    @PostMapping("/ask")
-    public ResponseEntity<RagResponse> ask(@RequestBody RagRequest request) {
-        return ResponseEntity.ok(ragService.ask(request));
-    }
 }

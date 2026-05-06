@@ -20,6 +20,7 @@ public class WeatherTool {
 
     private final ChatClient chatClient;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${weather.api-key}")
     private String apiKey;
@@ -28,12 +29,7 @@ public class WeatherTool {
         this.chatClient = builder.build();
     }
 
-    @Tool(
-            name = "getWeather",
-            description = "Get current weather for a city" +
-                    "get weather information of specific duration if possible when the user asks"
-    )
-    public String getWeather(String query) {
+    public WeatherResult getWeather(String query) {
 
         log.info("WeatherTool called: {}", query);
 
@@ -45,67 +41,53 @@ public class WeatherTool {
     // 도시 추출
     private String extractCityWithLLM(String query) {
 
-        String result = chatClient.prompt()
+        String raw = chatClient.prompt()
                 .system("""
                     Extract the city name from the user query.
+                    
+                    MUST return JSON only.
 
                     Rules:
-                    - MUST return valid JSON
-                    - DO NOT return plain text
+                    - Return English city name
                     - No explanation
                     
                     Format:
                     { "city": "Seoul" }
-                    
-                    Example:
-                    Input: "서울 날씨 어때?"
-                    Output: { "city": "Seoul" }
                     """)
                 .user(query)
                 .call()
                 .content();
 
-        log.info("Extracted city: {}", result);
-
-        //json 형식 강제 방어로직
-        int start = result.indexOf("{");
-        int end = result.lastIndexOf("}");
-
-        if (start != -1 && end != -1) {
-            String json = result.substring(start, end + 1);
-            return parseCity(json);  // 🔥 반드시 parse
-        }
-
-        return parseCity(result);
-    }
-
-    //json parsing 추가
-    private String parseCity(String cityJson) {
+        log.info("Extracted city: {}", raw);
 
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode node = mapper.readTree(cityJson);
+            int start = raw.indexOf("{");
+            int end = raw.lastIndexOf("}");
 
-            JsonNode cityNode = node.get("city");
+            if (start != -1 && end != -1) {
+                raw = raw.substring(start, end + 1);
+            }
 
-            if (cityNode == null || cityNode.asText().isBlank()) {
+            JsonNode node = objectMapper.readTree(raw);
+
+            String city = node.get("city").asText();
+
+            if (city == null || city.isBlank()) {
                 return "Seoul";
             }
 
-            return cityNode.asText();
+            return city;
 
         } catch (Exception e) {
-            log.error("JSON parsing failed: {}", cityJson, e);
+            log.error("City parsing failed", e);
             return "Seoul";
         }
     }
 
     // OpenWeather API 호출
-    private String callWeatherApi(String city) {
+    private WeatherResult callWeatherApi(String city) {
 
         try {
-            log.info("CITY = {}", city);
-
             String encodedCity = URLEncoder.encode(city, StandardCharsets.UTF_8);
 
             String url = String.format(
@@ -114,20 +96,49 @@ public class WeatherTool {
                     apiKey
             );
 
+            log.info("URL: {}", url);
+
             WeatherResponse response = restTemplate.getForObject(url, WeatherResponse.class);
+
             log.info("WeatherResponse = {}", response);
 
-            return String.format(
-                    "Current weather in %s:\nTemperature: %.1f°C\nHumidity: %d%%\nWind Speed: %.1f m/s",
+            String condition = "UNKNOWN";
+            String description = "UNKNOWN";
+
+            if (response.getWeather() != null && !response.getWeather().isEmpty()) {
+                condition = response.getWeather().get(0).getMain();
+                description = response.getWeather().get(0).getDescription();
+            }
+
+            return new WeatherResult(
                     city,
                     response.getMain().getTemp(),
                     response.getMain().getHumidity(),
-                    response.getWind().getSpeed()
+                    response.getWind().getSpeed(),
+                    condition,
+                    description
             );
 
         } catch (Exception e) {
             log.error("Weather API error", e);
-            return "Failed to fetch weather data for " + city;
+
+            return new WeatherResult(
+                    city,
+                    -1,
+                    -1,
+                    -1,
+                    "UNKNOWN",
+                    "Failed to fetch weather data"
+            );
         }
     }
+
+    public record WeatherResult(
+            String city,
+            double temperature,
+            int humidity,
+            double windSpeed,
+            String condition,
+            String description
+    ) {}
 }

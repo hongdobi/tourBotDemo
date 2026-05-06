@@ -1,45 +1,163 @@
 package org.tourBot.ai.agent;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
-import org.tourBot.ai.prompt.PromptProperties;
+import org.tourBot.ai.rag.dto.Source;
+import org.tourBot.ai.tool.ExchangeRateTool;
+import org.tourBot.ai.tool.WeatherTool;
+
+import java.util.List;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class RecommendAgent {
 
-    private final ChatClient chatClient;
-    private final PromptProperties prompt;
+    private final ChatClient recommendChatClient;
 
-    public RecommendAgent(ChatClient.Builder builder,
-                          PromptProperties prompt) {
+    public String generate(
+            String query,
+            List<Source> docs,
+            WeatherTool.WeatherResult weather,
+            ExchangeRateTool.ExchangeResult exchange
+    ) {
 
-        // RecommendAgent 전용 모델 설정
-        this.chatClient = builder
-                .defaultOptions(OpenAiChatOptions.builder()
-                        .model("gpt-4o-mini")
-                        .temperature(0.3)  // 검색은 낮게
-                        .build())
-                .build();
-        this.prompt = prompt;
+        log.info("RecommendAgent called");
+
+        String context = buildUnifiedContext(docs, weather, exchange);
+
+        String prompt = buildPrompt(query, context);
+
+        try {
+            return recommendChatClient.prompt()
+                    .user(prompt)
+                    .call()
+                    .content();
+
+        } catch (Exception e) {
+            log.error("RecommendAgent failed", e);
+            return fallbackResponse(query, context);
+        }
     }
 
-    @Tool(
-            name = "recommend",
-            description = "Sum up and filter the data to make recommendations."
-            + "come up with best suitable recommendation in relation to the context and the user's preference."
-    )
-    public String recommend(String query) {
+    /**
+     * 모든 tool 결과를 하나의 context로 통합
+     */
+    private String buildUnifiedContext(
+            List<Source> docs,
+            WeatherTool.WeatherResult weather,
+            ExchangeRateTool.ExchangeResult exchange
+    ) {
 
-        log.info("Recommend Agent Called: {}", query);
+        StringBuilder sb = new StringBuilder();
 
-        return chatClient.prompt()
-                .system(prompt.getRecommendAgent())
-                .user(query)
-                .call()
-                .content();
+        // Weather
+        if (weather != null) {
+            sb.append("[WEATHER]\n")
+                    .append("City: ").append(weather.city()).append("\n")
+                    .append("Temperature: ").append(weather.temperature()).append("°C\n")
+                    .append("Humidity: ").append(weather.humidity()).append("%\n")
+                    .append("Wind Speed: ").append(weather.windSpeed()).append(" m/s\n\n");
+        }
+
+        // Exchange
+        if (exchange != null) {
+            sb.append("[EXCHANGE]\n")
+                    .append(exchange.from()).append(" ")
+                    .append(exchange.amount())
+                    .append(" → ")
+                    .append(exchange.result()).append(" ")
+                    .append(exchange.to()).append("\n\n");
+        }
+
+        // Documents (RAG)
+        if (docs != null && !docs.isEmpty()) {
+            sb.append("[DOCUMENTS]\n");
+
+            docs.stream()
+                    .limit(5)
+                    .forEach(doc -> sb.append("- [")
+                            .append(doc.getFileName())
+                            .append("]\n")
+                            .append(doc.getContent())
+                            .append("\n\n"));
+        }
+
+        if (sb.isEmpty()) {
+            return "No context available.";
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Generator Prompt (핵심)
+     */
+    private String buildPrompt(String query, String context) {
+
+        return """
+        You are a smart travel assistant.
+
+        ---------------------
+        [User Question]
+        %s
+
+        ---------------------
+        [Context]
+        %s
+
+        ---------------------
+        [Instructions]
+
+        1. Use ALL available context:
+           - Weather
+           - Exchange rate
+           - Documents
+
+        2. Combine information naturally.
+           (Do NOT prioritize one source blindly)
+
+        3. If recommending:
+           - Provide 2~4 specific suggestions
+           - Explain briefly WHY
+           - Reflect weather conditions
+           - Consider budget if exchange exists
+
+        4. If context is insufficient:
+           - Use general knowledge
+           - Clearly say it is not from provided data
+
+        5. Never hallucinate facts from documents.
+
+        6. Keep answer:
+           - Clear
+           - Structured
+           - Practical
+        
+        7. If user input is casual (e.g. greeting):
+           - Respond naturally like a chatbot
+           - Do NOT mention documents
+
+        ---------------------
+        [Answer]
+        """.formatted(query, context);
+    }
+
+    /**
+     * fallback (LLM 실패 대비)
+     */
+    private String fallbackResponse(String query, String context) {
+
+        return """
+        Sorry, something went wrong while generating the answer.
+
+        [User Question]
+        %s
+
+        [Available Context]
+        %s
+        """.formatted(query, context);
     }
 }
