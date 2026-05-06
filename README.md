@@ -1,11 +1,15 @@
-# TourBot Demo - AI Chat Service (Spring AI + LLM + RAG + MSA)
+# TourBot Demo - AI Chat Service  
+**(Spring AI + Planner + Tool Orchestration + RAG + MSA)**
 
-> Spring AI 기반으로 Orchestrator LLM이 Tool, RAG, Agent를 동적으로 조합하는  
-> Microservices Architecture 기반 AI 챗봇 서비스
+> LLM을 직접 제어하지 않고,  
+> **Planner + Code Orchestration + Agent 구조로 구성된 실무형 AI 챗봇 서비스**
 
-### updated: 2026-04-30 (KST)
+### updated: 2026-05-06 (KST)
 
-## Service Architecture
+---
+
+# Core Architecture
+
 ```
                     [ User ]
                         ↓
@@ -16,28 +20,39 @@
 
         ┌──────────────────────────────────┐
         │          AI-service              │
-        │  (Spring AI / Orchestration)     │
         │                                  │
         │   ┌──────────────────────────┐   │
-        │   │   Orchestrator LLM       │   │
-        │   │ (Planner & Controller)   │   │
+        │   │        Planner           │   │
+        │   │  (Rule + LLM Hybrid)    │   │
+        │   └──────────────────────────┘   │
+        │                ↓                 │
+        │        (Execution Plan)          │
+        │                ↓                 │
+        │   ┌──────────────────────────┐   │
+        │   │   Orchestrator (Code)    │   │
+        │   │   - Tool Execution       │   │
+        │   │   - Flow Control         │   │
         │   └──────────────────────────┘   │
         │        ↓             ↓           │
-        │   (tool 호출)    (직접 응답)     │
-        │        ↓                         │
+        │   (RAG Search)   (External API)  │
+        │        ↓             ↓           │
         │  ┌──────────────┬──────────────┐ │
-        │  │ Weather Tool │ Exchange Tool│ │
-        │  │ (외부 API)   │ (외부 API)   │ │
+        │  │  Weather     │  Exchange    │ │
+        │  │   Tool       │   Tool       │ │
         │  └──────────────┴──────────────┘ │
         │              ↓                   │
-        │     ┌──────────────────────┐     │
-        │     │   Recommend Agent    │     │
-        │     │      (LLM)           │     │
-        │     └──────────────────────┘     │
+        │      ┌──────────────────┐        │
+        │      │  RAG Retriever   │        │
+        │      └──────────────────┘        │
+        │              ↓                   │
+        │      ┌──────────────────┐        │
+        │      │   Reranker       │        │
+        │      │  (현재 simple)   │        │
+        │      └──────────────────┘        │
         │              ↓                   │
         │   ┌──────────────────────────┐   │
-        │   │   Orchestrator LLM       │   │
-        │   │   (Final Response)       │   │
+        │   │   Recommend Agent        │   │
+        │   │  (LLM Answer Generator) │   │
         │   └──────────────────────────┘   │
         └──────────────────────────────────┘
                         ↓ (HTTP)
@@ -59,55 +74,88 @@
                 (Docker Compose로 전체 실행)
 ```
 
+---
 
-### 1. Frontend
-- React 기반 챗봇 UI
+# Core Components
 
-### 2. AI-service
-- Orchestrator LLM (Planner & Controller)
-  - 사용자 질문을 분석하여 Tool / RAG / Agent 호출 여부를 결정
-  - 전체 응답 흐름을 관리하는 핵심 컴포넌트
-- Weather Tool (외부 API)
-- Exchange Rate Tool (외부 API)
-- Recommend Agent (추천/조합 AI)
+## Planner
+- Rule + LLM Hybrid
+- Tool 사용 여부 결정
+```
+Plan {
+    useWeather: boolean
+    useExchangeRate: boolean
+    useRag: boolean
+}
+```
 
-### 3. History-service
-- DB Service (PostgreSQL)
-  - 대화 히스토리 및 사용자 데이터 저장
-- RAG Service (PostgreSQL + pgvector)
-  - 문서 임베딩 저장 및 유사도 검색
-  - LLM 응답 정확도 향상
+## Orchestrator
+- Planner 결과 기반 실행 흐름 제어
+- Tool 실행
+- 데이터 수집 및 조합
+- LLM Agent 호출
 
+## Tools
+- Weather API: 외부 API 기반 실시간 날씨 조회
+- Exchange Rate API: 환율 정보 조회
 
-## Key Features
-- Orchestrator LLM 기반 동적 Tool / Agent 선택
-- RAG 기반 컨텍스트 강화 응답 (Hallucination 감소)
-- 외부 API 연동 (날씨, 환율 등 실시간 데이터)
-- 세션 기반 대화 히스토리 관리
-- Microservices Architecture + Docker Compose 기반 통합 실행
+## RAG
+- PostgreSQL + pgvector 기반 검색
+- 문서 임베딩 저장 및 유사도 검색
 
-## Tech Stack
-- LLM: gpt-4o-mini
-- Embedding: text-embedding-3-small
-- Backend: Java 21, Spring Boot, Spring AI
-- Frontend: React
-- Database: PostgreSQL (RDB + pgvector)
-- Infra: Docker Compose
+## RecommendAgent
+- 최종 응답 생성
+- Context 기반 reasoning
+- 추천 / QA / 잡담 모두 처리
 
-# Run with Docker
-- git clone https://github.com/hongdobi/tourBotDemo.git
-- cd tourBotDemo
-- docker compose up --build
+---
 
-# Service
-- AI 기반 채팅 응답 생성
-- 세션 기반 대화 기록 저장
-- Real time data 외부 api 조회
-- Postgres Vector 기반 문서 임베딩 저장 및 조회
-- 조회된 데이터 ranking
-- Microservices 구조 분리 및 Docker 기반 통합 실행
+# Request Flow
 
-# Project Structure
+1. User Input
+2. Planner
+3. Orchestrator:
+   - Tool execution
+   - RAG search
+   - Rerank
+4. RecommendAgent → Response
+
+---
+
+# Key Features
+
+- Planner 기반 Tool 선택
+- Code-based Orchestration (LLM 의존도 감소)
+- RAG 기반 Context 강화 (Hallucination 감소)
+- 실시간 데이터 연동 (Weather / Exchange)
+- Single Agent Multi-role
+- Microservices Architecture
+
+---
+
+# Tech Stack
+
+LLM: gpt-4.1 (or configurable)
+Embedding: text-embedding-3-small
+Backend: Java 21, Spring Boot, Spring AI
+Frontend: React
+Database: PostgreSQL + pgvector
+Infra: Docker Compose
+
+---
+
+# Run
+
+```
+git clone https://github.com/hongdobi/tourBotDemo.git
+cd tourBotDemo
+docker compose up --build
+```
+
+---
+
+# Structure
+
 ```
 tourBotDemo/
  ├── tourBot-front (Frontend UI)
@@ -117,5 +165,9 @@ tourBotDemo/
  ├── .env.example
  └── README.md
 ```
- 
 
+---
+
+# 핵심
+
+"LLM을 사용하는 시스템이 아니라, LLM을 통제하는 시스템"
