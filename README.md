@@ -12,6 +12,8 @@
 
 # Core Architecture
 
+![architecture](./docs/architecture.png)
+
 ```
                     [ User ]
                         ↓
