@@ -169,6 +169,11 @@ tourBotDemo/
 
 ---
 
-# Essential
+# My Contributions
 
-"LLM을 사용하는 시스템이 아니라, LLM을 통제하는 시스템"
+- Spring AI 기반 Custom Orchestrator 설계 및 구현
+- Planner + Rule + LLM Hybrid 구조 설계
+- pgvector 기반 RAG 검색 시스템 구현
+- Vector Search + BM25 Hybrid Search 직접 구현
+- Tool 호출 흐름 및 Agent chaining 구조 설계
+- Recommend Agent 설계 (multi-role 처리)
