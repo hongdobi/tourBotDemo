@@ -1,8 +1,10 @@
 # TourBot Demo - AI Chat Service  
 **(Spring AI + Planner + Tool Orchestration + RAG + MSA)**
 
+```
 > "LLM을 사용하는 시스템이 아니라, LLM을 통제하는 시스템"
 > **Planner + Code Orchestration + Agent 구조로 구성된 실무형 AI 챗봇 서비스**
+```
 
 ### updated: 2026-05-12 (KST)
 
