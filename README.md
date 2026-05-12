@@ -1,10 +1,10 @@
 # TourBot Demo - AI Chat Service  
 **(Spring AI + Planner + Tool Orchestration + RAG + MSA)**
 
-> LLM을 직접 제어하지 않고,  
+> LLM에 판단으로 직접 제어하지 않고,  
 > **Planner + Code Orchestration + Agent 구조로 구성된 실무형 AI 챗봇 서비스**
 
-### updated: 2026-05-06 (KST)
+### updated: 2026-05-12 (KST)
 
 ---
 
@@ -148,6 +148,7 @@ Plan {
 
 ```
 git clone https://github.com/hongdobi/tourBotDemo.git
+create .env in reference with .env.example
 cd tourBotDemo
 docker compose up --build
 ```
