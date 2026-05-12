@@ -78,6 +78,31 @@
 
 ---
 
+# My Contributions
+
+- Spring AI 기반 Custom Orchestrator 설계 및 구현
+- Planner + Rule + LLM Hybrid 구조 설계
+- pgvector 기반 RAG 검색 시스템 구현
+- Vector Search + BM25 Hybrid Search 직접 구현
+- Tool 호출 흐름 및 Agent chaining 구조 설계
+- Recommend Agent 설계 (multi-role 처리)
+
+
+## 왜 LangChain을 쓰지 않았는가?
+- Java 기반 서비스 환경과의 통합성 문제
+- Tool 제어를 LLM에 맡기는 구조의 한계
+→ Code-based Orchestration으로 전환
+
+## 왜 Planner를 분리했는가?
+- LLM 단일 호출로 Tool 선택 시 불안정성 존재
+→ Rule + LLM Hybrid 구조로 안정성 확보
+
+## 왜 Hybrid Search를 사용했는가?
+- Vector Search: 의미 기반 강점
+- BM25: 키워드 정확도 강점
+→ 두 방식 결합으로 검색 품질 개선
+
+
 # Core Components
 
 ## Planner
@@ -170,27 +195,3 @@ tourBotDemo/
 ```
 
 ---
-
-# My Contributions
-
-- Spring AI 기반 Custom Orchestrator 설계 및 구현
-- Planner + Rule + LLM Hybrid 구조 설계
-- pgvector 기반 RAG 검색 시스템 구현
-- Vector Search + BM25 Hybrid Search 직접 구현
-- Tool 호출 흐름 및 Agent chaining 구조 설계
-- Recommend Agent 설계 (multi-role 처리)
-
-
-## 왜 LangChain을 쓰지 않았는가?
-- Java 기반 서비스 환경과의 통합성 문제
-- Tool 제어를 LLM에 맡기는 구조의 한계
-→ Code-based Orchestration으로 전환
-
-## 왜 Planner를 분리했는가?
-- LLM 단일 호출로 Tool 선택 시 불안정성 존재
-→ Rule + LLM Hybrid 구조로 안정성 확보
-
-## 왜 Hybrid Search를 사용했는가?
-- Vector Search: 의미 기반 강점
-- BM25: 키워드 정확도 강점
-→ 두 방식 결합으로 검색 품질 개선
